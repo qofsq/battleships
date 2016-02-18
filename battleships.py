@@ -19,26 +19,25 @@ class Fleet(object):
         for ship in self.ships:
             if not ship.destroyed:
                 afloat += 1
-
         return afloat
 
     def check_if_destroyed(self):
-
         afloat = 0
         for ship in self.ships:
             if not ship.destroyed:
                 afloat += 1
-
         if afloat == 0:
             print(self.name + ' has been destroyed!')
 
     def check_if_hit(self, coordinates):
         for ship in self.ships:
-            ship.check_if_hit(coordinates)
+            if self.destroyed:
+                print(self.name + ': Sunk')
+            else:
+                ship.check_if_hit(coordinates)
 
     def report(self):
         print(self)
-
         for ship in self.ships:
             print(ship)
     
@@ -57,34 +56,45 @@ class Battleship(object):
         self.positions.append(coordinates)
 
     def check_if_hit(self, coordinates):
-
-        if self.destroyed:
-            print(self.name + ': Sunk')
-
+        hit = False
+        for position in self.positions:
+            if coordinates == position:
+                hit = True
+        if hit:
+            self.validate_hit(coordinates)                   
         else:
-            hit = False
-            for position in self.positions:
-                if coordinates == position:
-                    hit = True
-                    self.hits.append(coordinates)
+            print("You missed!")
 
-            if hit:
-                if self.destroyed:
-                    print("You hit a destroyed ship.")
-                    return False 
+    def validate_hit(self, coordinates): 
+        if len(self.hits) == 0:
+            print("You hit " + self.name + "!") 
+            self.hits.append(coordinates) 
+        else:    
+            for hit in self.hits:
+                if coordinates == hit:
+                    if self.destroyed:
+                        print("You hit a destroyed ship.")
+                    else:
+                        print("Ship already hit in that location!!")
                 else:
                     print("You hit " + self.name + "!")
+                    self.hits.append(coordinates)
+                    self.check_if_destroyed()
 
-                if len(self.hits) == len(self.positions):
-                    self.destroyed = True
-                    print(self.name + ' has been destroyed!!')
+    def check_if_destroyed(self):                    
+        if len(self.hits) == len(self.positions):
+            self.destroyed = True
+            print(self.name + ' has been destroyed!!')
 
-            else:
-                print("You missed!")
-                return hit
+def enter_coordinates():
+    x = int(input("X coordinate: "))
+    y = int(input("Y coordinate: "))
+
+    coordinates = (x, y)
+    return coordinates
 
 def main():
-
+    
     enterprise = Battleship(name = 'Enterprise')
 
     enterprise.add_position((1,2))
@@ -117,30 +127,23 @@ def main():
     theirs.add_ship(bogie_1)
     theirs.add_ship(bogie_2)
 
-    print(ours)
-    print(enterprise)
-    print(voyager)
-    print(theirs)
-    print(bogie_1)
-    print(bogie_2)
-
+    ours.report()
+    theirs.report()
+    
     while ours.count_live_ships() and theirs.count_live_ships():
-        x = int(input("X coordinate: "))
-        y = int(input("Y coordinate: "))
-
-        coordinates = (x, y)
+        
+        coordinates = enter_coordinates()
 
         ours.check_if_hit(coordinates)
         theirs.check_if_hit(coordinates)
 
-        print('Ships left {}'.format(ours.count_live_ships() + theirs.count_live_ships()))
+        print('Ships left: {}'.format(ours.count_live_ships() + theirs.count_live_ships()))
         ours.report()
         theirs.report()
 
     ours.check_if_destroyed()
     theirs.check_if_destroyed()
-      
-    
+   
 if __name__ == '__main__':
     main()
     
